@@ -9,7 +9,8 @@
   },
   "releaseSource": {
     "type": "github",
-    "repository": "bitwarden/clients"
+    "repository": "bitwarden/clients",
+    "tags": "desktop-v*"
   },
   "sandbox": {
     "network": "full",
