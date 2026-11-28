@@ -50,3 +50,15 @@ test("repository statistics use the public GitHub token", async () => {
     /GITHUB_TOKEN: \$\{\{ secrets\.PUBLIC_GITHUB_TOKEN \}\}\n\s+run: pnpm run update-downloads/
   );
 });
+
+test("release refreshes authenticate with the public GitHub token", async () => {
+  const workflow = await readFile(".github/workflows/catalog-refresh.yml", "utf8");
+  const batch = workflow.indexOf("- name: Refresh batch");
+  const upload = workflow.indexOf("- name: Upload batch result");
+
+  assert.ok(batch !== -1 && upload > batch);
+  assert.match(
+    workflow.slice(batch, upload),
+    /GITHUB_TOKEN: \$\{\{ secrets\.PUBLIC_GITHUB_TOKEN \}\}\n\s+run: pnpm run run-refresh-batch/
+  );
+});

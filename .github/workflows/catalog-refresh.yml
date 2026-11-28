@@ -92,6 +92,7 @@ jobs:
           APPHUB_REFRESH_BATCH: ${{ toJSON(matrix) }}
           APPHUB_REFRESH_RESULT: /tmp/${{ matrix.id }}
           FORCE_REFRESH: ${{ github.event_name == 'workflow_dispatch' && '1' || '0' }}
+          GITHUB_TOKEN: ${{ secrets.PUBLIC_GITHUB_TOKEN }}
         run: pnpm run run-refresh-batch
 
       - name: Upload batch result

@@ -1,7 +1,8 @@
 import assert from "node:assert/strict";
 import { describe, test } from "node:test";
+import { forgeSourceReleases } from "#scripts/releases/forge";
 import { normalizeDate, selectCurrent, type SourceRelease } from "#scripts/releases/model";
-import type { ReleaseLock } from "#catalog/schema";
+import type { App, ReleaseLock } from "#catalog/schema";
 
 const releases: SourceRelease[] = [
   {
@@ -66,6 +67,91 @@ describe("current releases", () => {
     assert.throws(
       () => selectCurrent(releases, lock("missing", "2026-03-01T00:00:00Z"), "fixture"),
       /recorded current release is no longer available/
+    );
+  });
+});
+
+type ForgeRelease = Parameters<typeof forgeSourceReleases>[2][number];
+
+const appImage = {
+  id: "20000",
+  name: "oss-Bitwarden-2026.10.0-x86_64.AppImage",
+  browser_download_url:
+    "https://github.com/bitwarden/clients/releases/download/desktop-v2026.10.0/oss-Bitwarden-2026.10.0-x86_64.AppImage",
+  size: 100,
+};
+
+function forgeRelease(
+  version: string,
+  publishedAt: string,
+  assets: ForgeRelease["assets"] = []
+): ForgeRelease {
+  return {
+    id: version,
+    tag_name: version,
+    published_at: publishedAt,
+    html_url: `https://github.com/bitwarden/clients/releases/tag/${version}`,
+    draft: false,
+    prerelease: false,
+    assets,
+  };
+}
+
+const channelReleases = [
+  forgeRelease("cli-v2026.11.1", "2026-11-20T00:00:00Z"),
+  forgeRelease("browser-v2026.11.0", "2026-11-15T00:00:00Z"),
+  forgeRelease("desktop-v2026.10.0", "2026-11-10T00:00:00Z", [appImage]),
+];
+
+const bitwarden = {
+  id: "com.bitwarden.desktop",
+  releaseSource: {
+    type: "github",
+    repository: "bitwarden/clients",
+    tags: "desktop-v*",
+  },
+} as App;
+
+const emptyLock = { appId: bitwarden.id, releases: [] } satisfies ReleaseLock;
+
+describe("release tag filters", () => {
+  test("selects the newest release from the configured channel", () => {
+    const releases = forgeSourceReleases(bitwarden, emptyLock, channelReleases);
+
+    assert.deepEqual(
+      releases.map(({ version }) => version),
+      ["desktop-v2026.10.0"]
+    );
+    assert.deepEqual(
+      releases[0]?.artifacts.map(({ architecture, name }) => [architecture, name]),
+      [["x86_64", appImage.name]]
+    );
+  });
+
+  test("fails when no release matches the configured channel", () => {
+    assert.throws(
+      () =>
+        forgeSourceReleases(
+          bitwarden,
+          emptyLock,
+          channelReleases.filter(({ tag_name }) => !tag_name.startsWith("desktop-"))
+        ),
+      /no stable release found/
+    );
+  });
+
+  test("without a filter the newest channel is considered", () => {
+    const untagged = {
+      ...bitwarden,
+      releaseSource: {
+        type: "github",
+        repository: "bitwarden/clients",
+      },
+    } as App;
+
+    assert.throws(
+      () => forgeSourceReleases(untagged, emptyLock, channelReleases),
+      /no AppImage assets found/
     );
   });
 });

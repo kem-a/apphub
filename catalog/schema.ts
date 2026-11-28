@@ -23,23 +23,28 @@ const assetPattern = z
     "Must be a filename pattern ending in .AppImage"
   );
 
+const releaseTagPattern = z.string().min(1).max(200);
+
 const releaseSourceSchema = z.discriminatedUnion("type", [
   z
     .object({
       type: z.literal("github"),
       repository: z.string().regex(/^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/),
+      tags: releaseTagPattern.optional(),
     })
     .strict(),
   z
     .object({
       type: z.literal("gitlab"),
       repository: z.string().regex(/^[A-Za-z0-9_.-]+(?:\/[A-Za-z0-9_.-]+)+$/),
+      tags: releaseTagPattern.optional(),
     })
     .strict(),
   z
     .object({
       type: z.literal("codeberg"),
       repository: z.string().regex(/^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/),
+      tags: releaseTagPattern.optional(),
     })
     .strict(),
   z

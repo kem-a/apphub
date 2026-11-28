@@ -156,4 +156,33 @@ describe("recorded releases", () => {
       release.artifacts[0]?.checksumEvidence
     );
   });
+
+  test("records an architecture added to a recorded release", () => {
+    const added = structuredClone(release);
+
+    added.artifacts.push({
+      architecture: "aarch64",
+      name: "App-aarch64.AppImage",
+      url: "https://github.com/example/app/releases/download/1.0/App-aarch64.AppImage",
+      size: 200,
+      sha256: "c".repeat(64),
+      assetId: "10001",
+    });
+
+    assert.deepEqual(
+      reconcileRelease(release, added).artifacts.map(({ architecture }) => architecture),
+      ["x86_64", "aarch64"]
+    );
+  });
+
+  test("rejects a recorded architecture that disappeared", () => {
+    const removed = structuredClone(release);
+    const artifact = removed.artifacts[0];
+
+    assert.ok(artifact);
+
+    removed.artifacts = [{ ...artifact, architecture: "aarch64" }];
+
+    assert.throws(() => reconcileRelease(release, removed), /published artifact removed/);
+  });
 });

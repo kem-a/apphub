@@ -2,7 +2,12 @@ import { z } from "zod";
 import { selectAssets } from "#catalog/artifacts";
 import { httpsUrlSchema, type App, type ReleaseLock } from "#catalog/schema";
 import { getJson, getPages, releaseListJsonSizeLimit } from "#scripts/releases/http";
-import { normalizeDate, selectCurrent, type SourceRelease } from "#scripts/releases/model";
+import {
+  normalizeDate,
+  selectCurrent,
+  tagFilter,
+  type SourceRelease,
+} from "#scripts/releases/model";
 
 const releaseSchema = z.object({
   tag_name: z.string().min(1),
@@ -30,7 +35,7 @@ type GitLabRelease = z.infer<typeof releaseSchema>;
 
 function repository(app: App) {
   if (app.releaseSource.type === "gitlab") {
-    return app.releaseSource.repository;
+    return app.releaseSource;
   }
 
   throw new Error("Expected a GitLab source");
@@ -38,9 +43,10 @@ function repository(app: App) {
 
 export function gitlabSourceReleases(app: App, lock: ReleaseLock, releases: GitLabRelease[]) {
   const source = repository(app);
-  const ordered = [...releases].sort((left, right) =>
-    right.released_at.localeCompare(left.released_at)
-  );
+  const includeTag = tagFilter(source.tags);
+  const ordered = releases
+    .filter(({ tag_name }) => includeTag(tag_name))
+    .sort((left, right) => right.released_at.localeCompare(left.released_at));
 
   const current = selectCurrent(
     ordered.map((release) => ({
@@ -50,7 +56,7 @@ export function gitlabSourceReleases(app: App, lock: ReleaseLock, releases: GitL
       artifacts: [],
     })),
     lock,
-    source
+    source.repository
   );
 
   const versions = new Set(current.map(({ version }) => version));
@@ -74,7 +80,7 @@ export function gitlabSourceReleases(app: App, lock: ReleaseLock, releases: GitL
 
 export async function fetchGitLabReleases(app: App, lock: ReleaseLock) {
   const source = repository(app);
-  const project = encodeURIComponent(source);
+  const project = encodeURIComponent(source.repository);
   const [projectData, releases] = await Promise.all([
     getJson(`https://gitlab.com/api/v4/projects/${project}`),
     getPages(

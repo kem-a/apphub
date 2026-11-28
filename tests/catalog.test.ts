@@ -294,6 +294,36 @@ describe("catalog schema", () => {
     );
   });
 
+  test("accepts a tag filter on forge release sources", () => {
+    assert.deepEqual(
+      appSchema.parse({
+        ...app,
+        releaseSource: {
+          type: "github",
+          repository: "bitwarden/clients",
+          tags: "desktop-v*",
+        },
+      }).releaseSource,
+      { type: "github", repository: "bitwarden/clients", tags: "desktop-v*" }
+    );
+    assert.throws(() =>
+      appSchema.parse({
+        ...app,
+        releaseSource: { type: "github", repository: "example/app", tags: "" },
+      })
+    );
+    assert.throws(() =>
+      appSchema.parse({
+        ...app,
+        releaseSource: {
+          type: "feed",
+          url: "https://example.org/releases.json",
+          tags: "desktop-v*",
+        },
+      })
+    );
+  });
+
   test("accepts structured release feeds", () => {
     assert.deepEqual(
       appSchema.parse({

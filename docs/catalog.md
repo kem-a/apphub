@@ -31,6 +31,7 @@ The template denies all host access and isolates the app's processes. Grant only
 Do not add optional fields unless they apply:
 
 - `assets` overrides automatic AppImage architecture detection when filenames are ambiguous.
+- `releaseSource.tags` limits a GitHub, GitLab, or Codeberg source to one release channel.
 
 The generator gets names, descriptions, links, media, releases, and checksums from the configured
 sources. Do not add generated data to the pull request.
@@ -179,6 +180,21 @@ are not application submission sources.
 
 Supported sources are `github`, `gitlab`, `codeberg`, and `feed`. The build uses the newest stable
 release.
+
+Repositories that publish several release channels from one repository can name the tags that carry
+the AppImage:
+
+```json
+{
+  "type": "github",
+  "repository": "bitwarden/clients",
+  "tags": "desktop-v*"
+}
+```
+
+`tags` is an optional glob over release tag names. It is applied before the newest stable release is
+chosen, so tags from other channels are ignored. `*` and `?` are the only wildcards, and the pattern
+matches tag names only. The recorded version keeps the tag as published, including any prefix.
 
 Automatic architecture detection uses AppImage filenames. When no filename names x86_64, a single
 AppImage without any architecture in its name is used as x86_64, and its ELF header must match. Add

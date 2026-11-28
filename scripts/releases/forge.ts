@@ -3,7 +3,12 @@ import { sumReleaseDownloads } from "#catalog/downloads";
 import { selectAssets } from "#catalog/artifacts";
 import { httpsUrlSchema, type App, type ReleaseLock } from "#catalog/schema";
 import { getJson, getPages, releaseListJsonSizeLimit } from "#scripts/releases/http";
-import { normalizeDate, selectCurrent, type SourceRelease } from "#scripts/releases/model";
+import {
+  normalizeDate,
+  selectCurrent,
+  tagFilter,
+  type SourceRelease,
+} from "#scripts/releases/model";
 
 const assetSchema = z.object({
   id: z.union([z.string(), z.number().int()]).optional(),
@@ -131,9 +136,10 @@ async function getForgeRepository(type: ForgeType, repository: string) {
 export function forgeSourceReleases(app: App, lock: ReleaseLock, releases: ForgeRelease[]) {
   const releaseSource = repository(app);
   const source = releaseSource.repository;
-  const ordered = [...releases].sort((left, right) =>
-    right.published_at.localeCompare(left.published_at)
-  );
+  const includeTag = tagFilter(releaseSource.tags);
+  const ordered = releases
+    .filter(({ tag_name }) => includeTag(tag_name))
+    .sort((left, right) => right.published_at.localeCompare(left.published_at));
 
   const current = selectCurrent(
     ordered.map((release) => ({
@@ -180,7 +186,7 @@ export async function fetchForgeReleases(app: App, lock: ReleaseLock) {
   const source = repository(app);
   const [repositoryData, releases] = await Promise.all([
     getForgeRepository(source.type, source.repository),
-    lock.releases.length
+    lock.releases.length || source.tags
       ? getForgeReleases(source.type, source.repository)
       : getForgeReleasePage(source.type, source.repository),
   ]);
