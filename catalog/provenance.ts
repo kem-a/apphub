@@ -74,8 +74,12 @@ function verifyRelease(recorded: Release, observed: Release) {
     throw new RefreshError("integrity", `${recorded.version}: release identity changed`);
   }
 
-  if (recorded.artifacts.length !== observed.artifacts.length) {
-    throw new RefreshError("integrity", `${recorded.version}: published artifacts changed`);
+  const observedArchitectures = new Set(observed.artifacts.map(({ architecture }) => architecture));
+
+  for (const { architecture } of recorded.artifacts) {
+    if (!observedArchitectures.has(architecture)) {
+      throw new RefreshError("integrity", `${recorded.version}: published artifact removed`);
+    }
   }
 }
 
@@ -104,11 +108,7 @@ export function reconcileRelease(recorded: Release | undefined, observed: Releas
         ({ architecture }) => architecture === artifact.architecture
       );
 
-      if (!existing) {
-        throw new RefreshError("integrity", `${observed.version}: published artifact changed`);
-      }
-
-      return verifyArtifact(observed.version, existing, artifact);
+      return existing ? verifyArtifact(observed.version, existing, artifact) : artifact;
     }),
   };
 }

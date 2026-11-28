@@ -1,3 +1,4 @@
+import { globRegex } from "#catalog/artifacts";
 import type { HttpValidator } from "#catalog/refresh";
 import { RefreshError } from "#catalog/refresh";
 import type { Architecture, ReleaseLock } from "#catalog/schema";
@@ -42,6 +43,14 @@ interface ReleaseBoundary {
 
 export function normalizeDate(value: string) {
   return value.endsWith("Z") ? value : new Date(value).toISOString();
+}
+
+export function tagFilter(tags: string | undefined) {
+  if (tags === undefined) return () => true;
+
+  const expression = globRegex(tags);
+
+  return (tag: string) => expression.test(tag);
 }
 
 export function selectCurrent<T extends ReleaseBoundary>(

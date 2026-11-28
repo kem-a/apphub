@@ -32,9 +32,10 @@ AppHub compares published SHA-256 hashes with its own. A mismatch fails generati
 are kept as evidence, but AppHub does not verify those signatures.
 
 Repository renames are accepted when the provider's project and owner IDs stay the same. Transfers,
-identity changes, feed URL changes, or changed bytes quarantine the update. Moving to a new source
-needs a reviewed manifest change. Ordinary outages keep the last-known-good data. See
-[Refresh failures and freshness](freshness.md) for the complete policy.
+identity changes, feed URL changes, changed bytes, or a recorded architecture that disappears
+quarantine the update. An architecture added to a release AppHub already recorded is accepted and
+recorded as well. Moving to a new source needs a reviewed manifest change. Ordinary outages keep the
+last-known-good data. See [Refresh failures and freshness](freshness.md) for the complete policy.
 
 ## Guarantees and limits
 

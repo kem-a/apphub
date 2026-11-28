@@ -2,14 +2,14 @@
   "signatures": [
     {
       "keyid": "d815853716f890969be0c27ddedffc83736d55c39c716a4a7c7684f8bf2bddc0",
-      "sig": "7c879446fb7a1d9246f072ea12e2038d273b986029d33e96c12af43cae48ce5bda7d0ac011a1dab219b9f8af9c4236f160781ee089f33b42e992b2a10c1a3c0a"
+      "sig": "30ab304e7b353c3e3e273502fe14962e188e454ee00e1a39a097dd8c6aff0c718c01c81c0b1b6765160030e46763821cc360b9674794750adcd5f78210353c06"
     }
   ],
   "signed": {
     "_type": "targets",
     "spec_version": "1.0.31",
-    "version": 94,
-    "expires": "2026-12-28T12:51:23.453Z",
+    "version": 95,
+    "expires": "2026-12-28T17:25:52.045Z",
     "targets": {
       "catalog.json": {
         "length": 77584,
